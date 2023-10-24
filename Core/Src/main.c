@@ -27,7 +27,12 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-
+ enum statusLed{
+    led1,
+    led2,
+	led3,
+	led4,
+  };
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -63,10 +68,11 @@ TIM_HandleTypeDef htim2;
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
-static void MX_GPIO_Init(void);
 static void MX_TIM2_Init(void);
+static void MX_GPIO_Init(void);
 /* USER CODE BEGIN PFP */
 void display7SEG(int num);
+enum statusLed status = led1;
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -101,44 +107,22 @@ int main(void)
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
-  MX_GPIO_Init();
   MX_TIM2_Init();
+  MX_GPIO_Init();
   /* USER CODE BEGIN 2 */
   HAL_TIM_Base_Start_IT(&htim2);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  enum statusLed{
-    led1,
-    led2,
-  };
   HAL_GPIO_WritePin(EN0_GPIO_Port, EN0_Pin, 0);
   HAL_GPIO_WritePin(EN1_GPIO_Port, EN1_Pin, 1);
+  HAL_GPIO_WritePin(EN2_GPIO_Port, EN2_Pin, 1);
+  HAL_GPIO_WritePin(EN3_GPIO_Port, EN3_Pin, 1);
+  HAL_GPIO_WritePin(DOT_GPIO_Port, DOT_Pin, 1);
   display7SEG(1);
-  enum statusLed status = led1;
-  setTimer1(50);
   while (1)
   {
-	  if (timer1_flag == 1){
-		  setTimer1(50);
-		  switch (status) {
-			case led1:
-				display7SEG(1);
-				HAL_GPIO_WritePin(EN0_GPIO_Port,EN0_Pin, 0);
-				HAL_GPIO_WritePin(EN1_GPIO_Port,EN1_Pin, 1);
-				status = led2;
-				break;
-			case led2:
-				display7SEG(2);
-				HAL_GPIO_WritePin(EN0_GPIO_Port,EN0_Pin, 1);
-				HAL_GPIO_WritePin(EN1_GPIO_Port,EN1_Pin, 0);
-				status = led1;
-				break;
-			default:
-				break;
-		}
-	  }
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -240,14 +224,17 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, LED_Pin|EN0_Pin|EN1_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, DOT_Pin|LED_Pin|EN0_Pin|EN1_Pin
+                          |EN2_Pin|EN3_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, SEG0_Pin|SEG1_Pin|SEG2_Pin|SEG3_Pin
                           |SEG4_Pin|SEG5_Pin|SEG6_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : LED_Pin EN0_Pin EN1_Pin */
-  GPIO_InitStruct.Pin = LED_Pin|EN0_Pin|EN1_Pin;
+  /*Configure GPIO pins : DOT_Pin LED_Pin EN0_Pin EN1_Pin
+                           EN2_Pin EN3_Pin */
+  GPIO_InitStruct.Pin = DOT_Pin|LED_Pin|EN0_Pin|EN1_Pin
+                          |EN2_Pin|EN3_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -265,9 +252,53 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-int counter = 200;
+int counter = 50;
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
-	timerRun();
+	counter --;
+	if (counter <= 0){
+		counter = 50;
+		timer1_flag = 1;
+	}
+	if (timer1_flag == 1){
+		timer1_flag = 0;
+		HAL_GPIO_TogglePin(DOT_GPIO_Port, DOT_Pin);
+		  switch (status) {
+			case led1:
+				display7SEG(1);
+				HAL_GPIO_WritePin(EN0_GPIO_Port,EN0_Pin, 0);
+				HAL_GPIO_WritePin(EN1_GPIO_Port,EN1_Pin, 1);
+				HAL_GPIO_WritePin(EN2_GPIO_Port,EN2_Pin, 1);
+				HAL_GPIO_WritePin(EN3_GPIO_Port,EN3_Pin, 1);
+				status = led2;
+				break;
+			case led2:
+				display7SEG(2);
+				HAL_GPIO_WritePin(EN0_GPIO_Port,EN0_Pin, 1);
+				HAL_GPIO_WritePin(EN1_GPIO_Port,EN1_Pin, 0);
+				HAL_GPIO_WritePin(EN2_GPIO_Port,EN2_Pin, 1);
+				HAL_GPIO_WritePin(EN3_GPIO_Port,EN3_Pin, 1);
+				status = led3;
+				break;
+			case led3:
+				display7SEG(3);
+				HAL_GPIO_WritePin(EN0_GPIO_Port,EN0_Pin, 1);
+				HAL_GPIO_WritePin(EN1_GPIO_Port,EN1_Pin, 1);
+				HAL_GPIO_WritePin(EN2_GPIO_Port,EN2_Pin, 0);
+				HAL_GPIO_WritePin(EN3_GPIO_Port,EN3_Pin, 1);
+				status = led4;
+				break;
+			case led4:
+				display7SEG(0);
+				HAL_GPIO_WritePin(EN0_GPIO_Port,EN0_Pin, 1);
+				HAL_GPIO_WritePin(EN1_GPIO_Port,EN1_Pin, 1);
+				HAL_GPIO_WritePin(EN2_GPIO_Port,EN2_Pin, 1);
+				HAL_GPIO_WritePin(EN3_GPIO_Port,EN3_Pin, 0);
+				status = led1;
+				break;
+			default:
+				break;
+		}
+	}
 }
 void display7SEG(int num){
 	switch (num){
