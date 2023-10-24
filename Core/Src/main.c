@@ -27,12 +27,7 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
- enum statusLed{
-    led1,
-    led2,
-	led3,
-	led4,
-  };
+
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -51,7 +46,6 @@
 #define E_Pin			SEG4_Pin
 #define F_Pin			SEG5_Pin
 #define G_Pin			SEG6_Pin
-
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -65,16 +59,20 @@ TIM_HandleTypeDef htim2;
 /* USER CODE BEGIN PV */
 const int MAX_LED = 4;
 int led_buffer[4] = {1,2,3,4};
+int hour = 12;
+int minute = 34;
+int index_led = 0 ;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
-static void MX_TIM2_Init(void);
 static void MX_GPIO_Init(void);
+static void MX_TIM2_Init(void);
 /* USER CODE BEGIN PFP */
 void update7SEG(int index);
 void display7SEG(int num);
-enum statusLed status = led1;
+void update7SEG(int index);
+void updateClockBuffer();
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -109,22 +107,35 @@ int main(void)
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
-  MX_TIM2_Init();
   MX_GPIO_Init();
+  MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
   HAL_TIM_Base_Start_IT(&htim2);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  HAL_GPIO_WritePin(EN0_GPIO_Port, EN0_Pin, 0);
-  HAL_GPIO_WritePin(EN1_GPIO_Port, EN1_Pin, 1);
-  HAL_GPIO_WritePin(EN2_GPIO_Port, EN2_Pin, 1);
-  HAL_GPIO_WritePin(EN3_GPIO_Port, EN3_Pin, 1);
-  HAL_GPIO_WritePin(DOT_GPIO_Port, DOT_Pin, 1);
-  display7SEG(1);
+  int second = 55;
+  hour = 23;
+  minute = 59;
+  updateClockBuffer();
   while (1)
   {
+	  HAL_GPIO_TogglePin(DOT_GPIO_Port, DOT_Pin);
+	  second++;
+	  if ( second >= 60){
+		  second = 0;
+		  minute ++;
+	  }
+	  if (minute >= 60){
+		  minute = 0;
+		  hour ++;
+	  }
+	  if ( hour >= 24){
+		  hour = 0;
+	  }
+	  updateClockBuffer();
+	  HAL_Delay(1000);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -226,17 +237,17 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, DOT_Pin|LED_Pin|EN0_Pin|EN1_Pin
-                          |EN2_Pin|EN3_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, DOT_Pin|EN0_Pin|EN1_Pin|EN2_Pin
+                          |EN3_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, SEG0_Pin|SEG1_Pin|SEG2_Pin|SEG3_Pin
                           |SEG4_Pin|SEG5_Pin|SEG6_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : DOT_Pin LED_Pin EN0_Pin EN1_Pin
-                           EN2_Pin EN3_Pin */
-  GPIO_InitStruct.Pin = DOT_Pin|LED_Pin|EN0_Pin|EN1_Pin
-                          |EN2_Pin|EN3_Pin;
+  /*Configure GPIO pins : DOT_Pin EN0_Pin EN1_Pin EN2_Pin
+                           EN3_Pin */
+  GPIO_InitStruct.Pin = DOT_Pin|EN0_Pin|EN1_Pin|EN2_Pin
+                          |EN3_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -256,7 +267,6 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 int counter = 25;
 int counterDot = 2;
-int index_led = 0;
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 	counter --;
 	if (counter <= 0){
@@ -400,6 +410,16 @@ void display7SEG(int num){
 		HAL_GPIO_WritePin(G_GPIO_Port, G_Pin, 0);
 		break;
 	}
+}
+void updateClockBuffer(){
+	int tmp = hour / 10;
+	led_buffer[0] = tmp;
+	tmp = hour % 10;
+	led_buffer[1] = tmp;
+	tmp = minute / 10;
+	led_buffer[2] = tmp;
+	tmp = minute % 10;
+	led_buffer[3] = tmp;
 }
 /* USER CODE END 4 */
 
