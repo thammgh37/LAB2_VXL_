@@ -27,7 +27,10 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-
+ enum statusLed{
+    led1,
+    led2,
+  };
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -67,6 +70,7 @@ static void MX_GPIO_Init(void);
 static void MX_TIM2_Init(void);
 /* USER CODE BEGIN PFP */
 void display7SEG(int num);
+enum statusLed status = led1;
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -109,36 +113,11 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  enum statusLed{
-    led1,
-    led2,
-  };
   HAL_GPIO_WritePin(EN0_GPIO_Port, EN0_Pin, 0);
   HAL_GPIO_WritePin(EN1_GPIO_Port, EN1_Pin, 1);
   display7SEG(1);
-  enum statusLed status = led1;
-  setTimer1(50);
   while (1)
   {
-	  if (timer1_flag == 1){
-		  setTimer1(50);
-		  switch (status) {
-			case led1:
-				display7SEG(1);
-				HAL_GPIO_WritePin(EN0_GPIO_Port,EN0_Pin, 0);
-				HAL_GPIO_WritePin(EN1_GPIO_Port,EN1_Pin, 1);
-				status = led2;
-				break;
-			case led2:
-				display7SEG(2);
-				HAL_GPIO_WritePin(EN0_GPIO_Port,EN0_Pin, 1);
-				HAL_GPIO_WritePin(EN1_GPIO_Port,EN1_Pin, 0);
-				status = led1;
-				break;
-			default:
-				break;
-		}
-	  }
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -265,9 +244,32 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-int counter = 200;
+int counter = 50;
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
-	timerRun();
+	counter --;
+	if (counter <= 0){
+		counter = 50;
+		timer1_flag = 1;
+	}
+	if (timer1_flag == 1){
+		timer1_flag = 0;
+		  switch (status) {
+			case led1:
+				display7SEG(1);
+				HAL_GPIO_WritePin(EN0_GPIO_Port,EN0_Pin, 0);
+				HAL_GPIO_WritePin(EN1_GPIO_Port,EN1_Pin, 1);
+				status = led2;
+				break;
+			case led2:
+				display7SEG(2);
+				HAL_GPIO_WritePin(EN0_GPIO_Port,EN0_Pin, 1);
+				HAL_GPIO_WritePin(EN1_GPIO_Port,EN1_Pin, 0);
+				status = led1;
+				break;
+			default:
+				break;
+		}
+	}
 }
 void display7SEG(int num){
 	switch (num){
