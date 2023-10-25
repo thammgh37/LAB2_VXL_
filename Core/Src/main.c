@@ -121,21 +121,23 @@ int main(void)
   updateClockBuffer();
   while (1)
   {
-	  HAL_GPIO_TogglePin(DOT_GPIO_Port, DOT_Pin);
-	  second++;
-	  if ( second >= 60){
-		  second = 0;
-		  minute ++;
-	  }
-	  if (minute >= 60){
-		  minute = 0;
-		  hour ++;
-	  }
-	  if ( hour >= 24){
-		  hour = 0;
-	  }
-	  updateClockBuffer();
-	  HAL_Delay(1000);
+    if (timer1_flag == 1){
+      setTimer1(100);
+      HAL_GPIO_TogglePin(DOT_GPIO_Port, DOT_Pin);
+      second++;
+      if ( second >= 60){
+        second = 0;
+        minute ++;
+      }
+      if (minute >= 60){
+        minute = 0;
+        hour ++;
+      }
+      if ( hour >= 24){
+        hour = 0;
+      }
+      updateClockBuffer();
+    }
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -285,6 +287,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 		}
 		update7SEG(index_led++);
 	}
+  timerRun();
 }
 void update7SEG(int index){
 	switch (index){
@@ -411,6 +414,12 @@ void display7SEG(int num){
 		break;
 	}
 }
+/* Hàm dùng để phân tích số từ biến hour và minute vào mảng led_buffer với 
+  ledbuffer[0] chứa hàng chục của biến hour
+  ledbuffer[1] chứa hàng đơn vị của biến hour
+  ledbuffer[2] chứa hàng chục của biến minute
+  ledbuffer[3] chứa hàng đơn vị của biến minute
+  */
 void updateClockBuffer(){
 	int tmp = hour / 10;
 	led_buffer[0] = tmp;
