@@ -127,7 +127,7 @@ int main(void)
 			setTimer1(50);
 			counter1Second--;
 			if (counter1Second <= 0){
-				counter1Second = 4;
+				counter1Second = 2;
 				second++;
 				if ( second >= 60){
 				  second = 0;
